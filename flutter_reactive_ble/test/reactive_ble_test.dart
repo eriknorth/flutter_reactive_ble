@@ -15,7 +15,7 @@ import 'reactive_ble_test.mocks.dart';
 
 @GenerateMocks(
   [
-    BleOperationController,
+    ReactiveBlePlatform,
     Logger,
     ConnectedDeviceOperation,
     DeviceConnector,
@@ -24,7 +24,7 @@ import 'reactive_ble_test.mocks.dart';
 )
 void main() {
   group('$FlutterReactiveBle', () {
-    late MockBleOperationController _bleOperationController;
+    late MockReactiveBlePlatform _blePlatform;
     late MockDeviceScanner _deviceScanner;
     late MockDeviceConnector _deviceConnector;
     late MockConnectedDeviceOperation _deviceOperation;
@@ -34,26 +34,26 @@ void main() {
     late FlutterReactiveBle _sut;
 
     setUp(() {
-      _bleOperationController = MockBleOperationController();
+      _blePlatform = MockReactiveBlePlatform();
       _deviceScanner = MockDeviceScanner();
       _deviceConnector = MockDeviceConnector();
       _deviceOperation = MockConnectedDeviceOperation();
       _bleStatusController = StreamController();
       _debugLogger = MockLogger();
 
-      when(_bleOperationController.initialize()).thenAnswer(
+      when(_blePlatform.initialize()).thenAnswer(
         (_) => Future.value(),
       );
 
-      when(_bleOperationController.deinitialize()).thenAnswer(
+      when(_blePlatform.deinitialize()).thenAnswer(
         (_) => Future.value(),
       );
 
-      when(_bleOperationController.bleStatusStream).thenAnswer(
+      when(_blePlatform.bleStatusStream).thenAnswer(
           (realInvocation) => _bleStatusController.stream.asBroadcastStream());
 
       _sut = FlutterReactiveBle.witDependencies(
-        bleOperationController: _bleOperationController,
+        reactiveBlePlatform: _blePlatform,
         deviceScanner: _deviceScanner,
         deviceConnector: _deviceConnector,
         connectedDeviceOperation: _deviceOperation,
@@ -125,7 +125,7 @@ void main() {
 
     group('Deinitialize', () {
       setUp(() async {
-        when(_bleOperationController.deinitialize()).thenAnswer((_) async => 1);
+        when(_blePlatform.deinitialize()).thenAnswer((_) async => 1);
         await _sut.deinitialize();
       });
 
@@ -359,7 +359,7 @@ void main() {
       );
 
       setUp(() async {
-        when(_bleOperationController.clearGattCache(any))
+        when(_blePlatform.clearGattCache(any))
             .thenAnswer((_) async => result);
 
         await _sut.clearGattCache(deviceId);

@@ -11,12 +11,11 @@ import 'package:mockito/mockito.dart';
 
 import 'device_connector_test.mocks.dart';
 
-@GenerateMocks(
-    [DeviceConnectionController, DeviceScanner, DiscoveredDevicesRegistry])
+@GenerateMocks([ReactiveBlePlatform, DeviceScanner, DiscoveredDevicesRegistry])
 void main() {
   group('$DeviceConnector', () {
     late DeviceConnector _sut;
-    late MockDeviceConnectionController _controller;
+    late MockReactiveBlePlatform _blePlatform;
     late Stream<ConnectionStateUpdate> _connectionStateUpdateStream;
     late Stream<ConnectionStateUpdate?> _result;
     late MockDiscoveredDevicesRegistry _registry;
@@ -31,16 +30,16 @@ void main() {
     const _delayAfterFailure = Duration(milliseconds: 10);
 
     setUp(() {
-      _controller = MockDeviceConnectionController();
+      _blePlatform = MockReactiveBlePlatform();
       _registry = MockDiscoveredDevicesRegistry();
       _scanner = MockDeviceScanner();
       _servicesToDiscover = {
         Uuid.parse('FEFE'): [Uuid.parse('FEFE')]
       };
-      when(_controller.connectionUpdateStream)
+      when(_blePlatform.connectionUpdateStream)
           .thenAnswer((_) => _connectionStateUpdateStream);
 
-      when(_controller.disconnectDevice(any)).thenAnswer((_) async => 0);
+      when(_blePlatform.disconnectDevice(any)).thenAnswer((_) async => 0);
 
       updateForDevice = const ConnectionStateUpdate(
         deviceId: _deviceId,
@@ -54,7 +53,7 @@ void main() {
         failure: null,
       );
       _sut = DeviceConnectorImpl(
-        controller: _controller,
+        blePlatform: _blePlatform,
         deviceIsDiscoveredRecently: _registry.deviceIsDiscoveredRecently,
         deviceScanner: _scanner,
         delayAfterScanFailure: _delayAfterFailure,
@@ -72,7 +71,7 @@ void main() {
 
         group('And invoking connect method succeeds', () {
           setUp(() async {
-            when(_controller.connectToDevice(any, any, any)).thenAnswer(
+            when(_blePlatform.connectToDevice(any, any, any)).thenAnswer(
               (_) => Stream.fromIterable([1]),
             );
             _result = _sut.connect(
@@ -156,7 +155,7 @@ void main() {
                     deviceId: deviceId,
                     cacheValidity: anyNamed('cacheValidity')))
                 .thenReturn(true);
-            when(_controller.connectToDevice(any, any, any))
+            when(_blePlatform.connectToDevice(any, any, any))
                 .thenAnswer((_) => Stream.fromIterable([1]));
 
             _result = _sut.connectToAdvertisingDevice(
@@ -217,7 +216,7 @@ void main() {
                     deviceId: deviceId,
                     cacheValidity: anyNamed('cacheValidity')))
                 .thenReturn(true);
-            when(_controller.connectToDevice(any, any, any))
+            when(_blePlatform.connectToDevice(any, any, any))
                 .thenAnswer((_) => Stream.fromIterable([1]));
 
             _result = _sut.connectToAdvertisingDevice(
@@ -277,7 +276,7 @@ void main() {
                       cacheValidity: anyNamed('cacheValidity')))
                   .thenAnswer((_) => responses.removeAt(0));
 
-              when(_controller.connectToDevice(any, any, any))
+              when(_blePlatform.connectToDevice(any, any, any))
                   .thenAnswer((_) => Stream.fromIterable([1]));
 
               _result = _sut.connectToAdvertisingDevice(
