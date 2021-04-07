@@ -359,8 +359,7 @@ void main() {
       );
 
       setUp(() async {
-        when(_blePlatform.clearGattCache(any))
-            .thenAnswer((_) async => result);
+        when(_blePlatform.clearGattCache(any)).thenAnswer((_) async => result);
 
         await _sut.clearGattCache(deviceId);
       });
