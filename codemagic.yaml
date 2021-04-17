@@ -1,0 +1,63 @@
+# Automatically generated on 2021-04-17 UTC from https://codemagic.io/app/5e01b7a9a4fb3539d41734ce/settings
+# Note that this configuration is not an exact match to UI settings. Review and adjust as necessary.
+
+workflows:
+  default-workflow:
+    name: ReactiveBle Workflow
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+    scripts:
+      - |
+        # set up debug keystore
+        rm -f ~/.android/debug.keystore
+        keytool -genkeypair \
+          -alias androiddebugkey \
+          -keypass android \
+          -keystore ~/.android/debug.keystore \
+          -storepass android \
+          -dname 'CN=Android Debug,O=Android,C=US' \
+          -keyalg 'RSA' \
+          -keysize 2048 \
+          -validity 10000
+      - |
+        # set up local properties
+        echo "flutter.sdk=$HOME/programs/flutter" > "$FCI_BUILD_DIR/example/android/local.properties"
+        # Reactive ble platform interface
+      - cd flutter_reactive_ble_platform_interface && flutter packages pub get
+      - cd flutter_reactive_ble_platform_interface && flutter analyze
+      - cd flutter_reactive_ble_platform_interface && flutter test
+        # Reactive ble
+      - cd flutter_reactive_ble/example && flutter packages pub get
+      - cd flutter_reactive_ble/example && flutter analyze
+      - cdflutter_reactive_ble/ example && flutter test
+      - |
+        #!/bin/bash -ex
+        cd flutter_reactive_ble/example/android && ls && ./gradlew detekt && ./gradlew testDebugUnitTest
+      - cd flutter_reactive_ble/example && flutter build apk --debug
+      - find . -name "Podfile" -execdir pod install \;
+      - cd flutter_reactive_ble/example && flutter build ios --debug --no-codesign
+      - |
+        #!/bin/bash -ex
+        cd flutter_reactive_ble && flutter pub publish --dry-run
+        cd flutter_reactive_ble_platform_interface && flutter pub publish --dry-run
+    artifacts:
+      - flutter_reactive_ble/example/build/**/outputs/**/*.apk
+      - flutter_reactive_ble/example/build/**/outputs/**/*.aab
+      - flutter_reactive_ble/example/build/**/outputs/**/mapping.txt
+      - flutter_reactive_ble/example/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_reactive_ble/example/flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - remonhelmond@gmail.com
