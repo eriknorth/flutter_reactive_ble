@@ -1,0 +1,1 @@
+../../../../ios/Classes/Plugin/Common/MethodHandler.swift
